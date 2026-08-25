@@ -7,9 +7,20 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "node src/index.js"
+    "dev": "nodemon src/index.js"
   },
   "devDependencies": {
-    "prettier": "3.9.6"
+    "nodemon": "^3.1.14",
+    "prettier": "3.9.6",
+    "prisma": "^7.9.1"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.2.0",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.23.0"
   }
 }
