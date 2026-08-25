@@ -1,5 +1,9 @@
 import userServices from "../services/userServices.js";
-import { registerUserSchema, verifyRegisterUserSchema, loginUserSchema } from "../validators/userValidators.js";
+import { registerUserSchema, 
+         verifyRegisterUserSchema, 
+         loginUserSchema,
+         resendUserVerificationEmailSchema
+      } from "../validators/userValidators.js";
 
 
 async function registerUser(req, res) {
@@ -83,8 +87,38 @@ async function loginUser(req, res) {
 }
 
 
+async function resendEmailVerification(req, res) {
+  try {
+    const userInputValidation = await resendUserVerificationEmailSchema.safeParseAsync(req.body);
+    if (userInputValidation.error) {
+      return res.status(400).json({
+        message: userInputValidation.error.format()
+      });
+    }
+
+    const { email } = userInputValidation.data;
+
+    await userServices.resendEmail(email);
+
+    return res.status(200).json({
+      message: "Verification code is send again to your email!"
+    });
+  } 
+  catch (error) {
+    console.log(error);
+    
+    return res.status(error.statusCode || 500).json({
+      message: error.statusCode ?
+               error.message 
+               : "Internel Server Error!"
+    });
+  }
+}
+
+
 export default {
   registerUser,
   verifyRegisteredEmailAddress,
-  loginUser
+  loginUser,
+  resendEmailVerification
 }

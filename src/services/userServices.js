@@ -149,8 +149,49 @@ async function loginUser(email, password) {
 }
 
 
+async function resendEmail(email) {
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email
+    }
+  });
+
+  if (!user) {
+    const error = new Error(`User does not exist!`);
+    error.statusCode = 400;
+    throw error;
+  } 
+
+  else if (user.isEmailVerified === true) {
+    const error = new Error(`User is already verified!`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const otp = crypto.randomInt(100000, 1000000).toString();
+  await redis.set(
+    `email-verification ${email}`, 
+    otp,
+    {
+      EX: 500
+    } 
+  );
+
+  await mailer.sendMail(
+    email, 
+    "Verify Your email", 
+    `${user.firstname} ${user.lastname}`,
+    otp);
+
+    return user;
+}
+
+
+
+
 export default {
   registerUser,
   verifyRegisteredEmailAddress,
-  loginUser
+  loginUser,
+  resendEmail
 }
