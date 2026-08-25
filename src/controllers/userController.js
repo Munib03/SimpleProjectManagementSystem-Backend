@@ -1,5 +1,6 @@
 import userServices from "../services/userServices.js";
 import { registerUserSchema, verifyRegisterUserSchema } from "../validators/userValidators.js";
+import { generateToken } from "../utils/generateToken.js";
 
 
 async function registerUser(req, res) {
@@ -11,8 +12,8 @@ async function registerUser(req, res) {
       });
     }
 
-    const { firstname, lastname, email, password } = userInputValidation.data;
-    await userServices.registerUser(firstname, lastname, email, password);
+    const { firstname, lastname, email, role, password } = userInputValidation.data;
+    await userServices.registerUser(firstname, lastname, email, password, role);
 
     return res.status(201).json({
       message: "User is registered successfully, please verify your email address!"
@@ -40,8 +41,16 @@ async function verifyRegisteredEmailAddress(req, res) {
     const { email, code } = userInputValidation.data;
     const result = await userServices.verifyRegisteredEmailAddress(email, code);
 
+    const payload = {
+      id: result.id,
+      email: result.email,
+      role: result.role
+    };
+    const token = generateToken(payload) ;
+
     return res.status(200).json({
-      message: "User is verified successfully!"
+      message: "User is verified successfully!",
+      token: token
     });
   } 
   catch (error) {

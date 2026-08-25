@@ -1,4 +1,4 @@
-import { email, z } from "zod";
+import { z } from "zod";
 
 
 export const registerUserSchema = z.object({
@@ -21,7 +21,12 @@ export const registerUserSchema = z.object({
   password: z 
     .string()
     .min(8, "Password should be atleast 8 characters!")
-    .max(20, "Password must be at max 20 characters!")
+    .max(20, "Password must be at max 20 characters!"),
+
+  role: z 
+    .string()
+    .trim()
+    .toLowerCase()
 });
 
 

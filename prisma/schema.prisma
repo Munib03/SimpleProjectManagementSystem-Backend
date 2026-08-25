@@ -8,11 +8,18 @@ datasource db {
 }
 
 
+enum Roles {
+  admin
+  user
+}
+
+
 model user {
   id String @id @default(uuid())
   firstname String
   lastname String
   email String @unique
+  role Roles @default(user)
   password String
   isEmailVerified Boolean @default(false)
 

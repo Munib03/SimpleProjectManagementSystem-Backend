@@ -3,17 +3,34 @@ import bcrypt from "bcrypt";
 import redis from "../utils/redis.js";
 import crypto from "crypto";
 import mailer from "../utils/sendEmail.js";
+import { userRoles } from "../utils/userRoles.js";
 
 
-async function registerUser(firstname, lastname, email, password) {
+async function registerUser(firstname, lastname, email, password, role) {
   const userExist = await prisma.user.findUnique({
     where: {
       email: email,
     }
   });
 
-  if (userExist?.isEmailVerified) {
-    const error = new Error(`User with email [${email}] already exists!`);
+  if (userExist) {
+    if (userExist.isEmailVerified === false) {
+      await prisma.user.delete({
+        where: {
+          email: email
+        }
+      });
+    }
+
+    else {
+      const error = new Error(`User with email [${email}] already exists!`);
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
+  else if (role !== userRoles.admin && role !== userRoles.user) {
+    const error = new Error(`Role can be [Admin, User]!`);
     error.statusCode = 400;
     throw error;
   }
@@ -25,7 +42,8 @@ async function registerUser(firstname, lastname, email, password) {
       firstname: firstname,
       lastname: lastname,
       email: email,
-      password: hashedPassword
+      password: hashedPassword,
+      role: role
     },
     omit: {
       password: true, 
@@ -86,6 +104,8 @@ async function verifyRegisteredEmailAddress(email, code) {
   })
 
   await redis.del(`email-verification ${email}`);
+
+  return userExist;
 }
 
 
