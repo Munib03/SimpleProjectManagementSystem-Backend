@@ -41,4 +41,15 @@ export const verifyRegisterUserSchema = z.object({
     .string()
     .min(6)
     .max(6)
-})
+});
+
+
+export const loginUserSchema = z.object({
+  email: z 
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Invalid Email!"),
+  password: z 
+    .string()
+});

@@ -4,6 +4,7 @@ import redis from "../utils/redis.js";
 import crypto from "crypto";
 import mailer from "../utils/sendEmail.js";
 import { userRoles } from "../utils/userRoles.js";
+import { generateToken } from "../utils/generateToken.js";
 
 
 async function registerUser(firstname, lastname, email, password, role) {
@@ -105,11 +106,51 @@ async function verifyRegisteredEmailAddress(email, code) {
 
   await redis.del(`email-verification ${email}`);
 
-  return userExist;
+  const payload = {
+    id: userExist.id,
+    email: userExist.email,
+    role: userExist.role
+  };
+  const token = generateToken(payload);
+
+  return token;
+}
+
+
+async function loginUser(email, password) {
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email
+    }
+  });
+
+  if (!user) {
+    const error = new Error(`User with email [${email}] does not exist!`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const comparePassword = await bcrypt.compare(password, user.password);
+  if (!comparePassword) {
+    const error = new Error(`Incorrect Password`);
+    error.statusCode = 400;
+    throw error;
+  }
+  
+  const payload = {
+    id: user.id,
+    email: user.email,
+    role: user.role
+  };
+
+  const token = generateToken(payload);
+
+  return token;
 }
 
 
 export default {
   registerUser,
-  verifyRegisteredEmailAddress
+  verifyRegisteredEmailAddress,
+  loginUser
 }
