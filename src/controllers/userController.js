@@ -1,5 +1,5 @@
 import userServices from "../services/userServices.js";
-import { registerUserSchema } from "../validators/userValidators.js";
+import { registerUserSchema, verifyRegisterUserSchema } from "../validators/userValidators.js";
 
 
 async function registerUser(req, res) {
@@ -12,11 +12,10 @@ async function registerUser(req, res) {
     }
 
     const { firstname, lastname, email, password } = userInputValidation.data;
-    const result = await userServices.registerUser(firstname, lastname, email, password);
+    await userServices.registerUser(firstname, lastname, email, password);
 
     return res.status(201).json({
-      message: "User is registered successfully, please verify your email address!",
-      user: result
+      message: "User is registered successfully, please verify your email address!"
     });
   }
   catch(error) {
@@ -29,6 +28,33 @@ async function registerUser(req, res) {
 }
 
 
+async function verifyRegisteredEmailAddress(req, res) {
+  try {
+    const userInputValidation = await verifyRegisterUserSchema.safeParseAsync(req.body);
+    if (userInputValidation.error) {
+      return res.status(400).json({
+        message: userInputValidation.error.format()
+      });
+    }
+
+    const { email, code } = userInputValidation.data;
+    const result = await userServices.verifyRegisteredEmailAddress(email, code);
+
+    return res.status(200).json({
+      message: "User is verified successfully!"
+    });
+  } 
+  catch (error) {
+    console.log(error);
+    
+    return res.status(error.statusCode || 500).json({
+      message: error.statusCode ? error.message : "Internel Server Error!"
+    });
+  }
+}
+
+
 export default {
-  registerUser
+  registerUser,
+  verifyRegisteredEmailAddress
 }
