@@ -2,7 +2,8 @@ import userServices from "../services/userServices.js";
 import { registerUserSchema, 
          verifyRegisterUserSchema, 
          loginUserSchema,
-         resendUserVerificationEmailSchema
+         resendAndForgotPasswordUserVerificationEmailSchema,
+         resetPasswordSchema
       } from "../validators/userValidators.js";
 
 
@@ -89,7 +90,7 @@ async function loginUser(req, res) {
 
 async function resendEmailVerification(req, res) {
   try {
-    const userInputValidation = await resendUserVerificationEmailSchema.safeParseAsync(req.body);
+    const userInputValidation = await resendAndForgotPasswordUserVerificationEmailSchema.safeParseAsync(req.body);
     if (userInputValidation.error) {
       return res.status(400).json({
         message: userInputValidation.error.format()
@@ -116,9 +117,63 @@ async function resendEmailVerification(req, res) {
 }
 
 
+async function forgotPassword(req, res) {
+  try {
+    const userInputValidation = await resendAndForgotPasswordUserVerificationEmailSchema.safeParseAsync(req.body);
+    if (userInputValidation.error) {
+      return res.status(400).json({
+        message: userInputValidation.error.format()
+      });
+    }
+
+    const { email } = userInputValidation.data;
+    await userServices.forgotPassword(email);
+
+    return res.status(200).json({
+      message: "A link is send to your email to reset your password!"
+    });
+  } 
+  catch (error) {
+    console.log(error);
+    
+    return res.status(error.statusCode || 500).json({
+      message: error.statusCode ? error.message : "Internel Server Error!"
+    });
+  }
+}
+
+
+async function resetPassword(req, res) {
+  try {
+    const userInputValidation = await resetPasswordSchema.safeParseAsync(req.body);
+    if (userInputValidation.error) {
+      return res.status(400).json({
+        message: userInputValidation.error.format()
+      });
+    }
+
+    const { token, newPassword } = userInputValidation.data;
+    await userServices.resetPassword(token, newPassword);
+
+    return res.status(200).json({
+      message: "Password is updated successfully! Try to login with new Password!"
+    });
+  } 
+  catch (error) {
+    console.log(error);
+    
+    return res.status(error.statusCode || 500).json({
+      message: error.statusCode ? error.message : "Internel Server Error!"
+    });
+  }
+}
+
+
 export default {
   registerUser,
   verifyRegisteredEmailAddress,
   loginUser,
-  resendEmailVerification
+  resendEmailVerification,
+  forgotPassword,
+  resetPassword
 }

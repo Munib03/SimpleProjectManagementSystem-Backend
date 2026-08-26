@@ -8,6 +8,8 @@ router.post("/register", userController.registerUser);
 router.post("/verify-register", userController.verifyRegisteredEmailAddress);
 router.post("/login", userController.loginUser);
 router.post("/resend-verification-email", userController.resendEmailVerification);
+router.post("/forgot-password", userController.forgotPassword);
+router.post("/reset-password", userController.resetPassword);
 
 
 export default router;

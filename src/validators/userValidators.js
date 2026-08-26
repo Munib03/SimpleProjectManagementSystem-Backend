@@ -55,9 +55,20 @@ export const loginUserSchema = z.object({
 });
 
 
-export const resendUserVerificationEmailSchema = z.object({
+export const resendAndForgotPasswordUserVerificationEmailSchema = z.object({
   email: z 
     .string()
     .trim()
     .email("Invalid Email!")
+});
+
+
+export const resetPasswordSchema = z.object({
+  token: z 
+    .string(),
+
+  newPassword: z 
+    .string()
+    .min(8)
+    .max(20)  
 });

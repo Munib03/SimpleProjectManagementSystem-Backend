@@ -63,7 +63,17 @@ async function registerUser(firstname, lastname, email, password, role) {
     }
   );
 
-  await mailer.sendMail(email, "Verify Your email", `${firstname} ${lastname}`, otp);
+  await mailer.sendMail(
+                        email, 
+                        "Verify Your email", 
+                        `${firstname} ${lastname}`, 
+`Thank you for registering.
+
+Your verification code is: ${otp}
+
+This code will expire in 5 minutes.
+
+If you did not create this account, you can ignore this email.`);
 
   return user;
 }
@@ -181,11 +191,83 @@ async function resendEmail(email) {
     email, 
     "Verify Your email", 
     `${user.firstname} ${user.lastname}`,
-    otp);
+    `Thank you for registering.
+
+Your verification code is: ${otp}
+
+This code will expire in 5 minutes.
+
+If you did not create this account, you can ignore this email.`);
 
     return user;
 }
 
+
+async function forgotPassword(email) {
+  const user = await prisma.user.findUnique({
+    where: {
+      email: email
+    }
+  });
+
+  if (!user) {
+    const error = new Error(`User with email [${email}] does not exist!`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  await redis.set(
+    `password-reset${resetToken}`,
+    user.id,
+    {
+      EX: 15 * 60
+    }
+  );
+
+
+  const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+  await mailer.sendMail(
+    email,
+    "Reset Your Password",
+    `${user.firstname} ${user.lastname}`,
+`You requested to reset your password.
+
+Click the link below to reset your password:
+
+${resetLink}
+
+This link will expire in 15 minutes.
+
+If you did not request a password reset, you can ignore this email.`  
+);
+}
+
+
+async function resetPassword(token, newPassword) {
+  const userId = await redis.get(`password-reset${token}`);
+  if (!userId) {
+    const error = new Error(`Invalid Token or Expired!`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+
+  var now = new Date();
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({
+    where: {
+      id: userId
+    },
+    data: {
+      password: hashedPassword,
+      updatedAt: now
+    }
+  });
+
+  await redis.del(`password-reset${token}`);
+}
 
 
 
@@ -193,5 +275,7 @@ export default {
   registerUser,
   verifyRegisteredEmailAddress,
   loginUser,
-  resendEmail
+  resendEmail,
+  forgotPassword,
+  resetPassword
 }
