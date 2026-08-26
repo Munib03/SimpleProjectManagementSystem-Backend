@@ -5,6 +5,8 @@ import crypto from "crypto";
 import mailer from "../utils/sendEmail.js";
 import { userRoles } from "../utils/userRoles.js";
 import { generateToken } from "../utils/generateToken.js";
+import generateResetPasswordEmail from "../utils/resetPassword.js"
+import generateVerificationEmail from "../utils/verificationEmail.js";
 
 
 async function registerUser(firstname, lastname, email, password, role) {
@@ -63,18 +65,17 @@ async function registerUser(firstname, lastname, email, password, role) {
     }
   );
 
+  const html = generateVerificationEmail(
+    `${firstname} ${lastname}`,
+    otp
+  );
+
   await mailer.sendMail(
-                        email, 
-                        "Verify Your email", 
-                        `${firstname} ${lastname}`, 
-`Thank you for registering.
-
-Your verification code is: ${otp}
-
-This code will expire in 5 minutes.
-
-If you did not create this account, you can ignore this email.`);
-
+    email,
+    "Verify Your Email",
+    html
+  );
+  
   return user;
 }
 
@@ -187,19 +188,18 @@ async function resendEmail(email) {
     } 
   );
 
+  const html = generateVerificationEmail(
+    `${firstname} ${lastname}`,
+    otp
+  );
+
   await mailer.sendMail(
-    email, 
-    "Verify Your email", 
-    `${user.firstname} ${user.lastname}`,
-    `Thank you for registering.
+    email,
+    "Verify Your Email",
+    html
+  );
 
-Your verification code is: ${otp}
-
-This code will expire in 5 minutes.
-
-If you did not create this account, you can ignore this email.`);
-
-    return user;
+  return user;
 }
 
 
@@ -228,20 +228,16 @@ async function forgotPassword(email) {
 
 
   const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`;
+  const html = generateResetPasswordEmail(
+    `${user.firstname} ${user.lastname}`,
+    resetLink
+  );
+
   await mailer.sendMail(
     email,
-    "Reset Your Password",
-    `${user.firstname} ${user.lastname}`,
-`You requested to reset your password.
-
-Click the link below to reset your password:
-
-${resetLink}
-
-This link will expire in 15 minutes.
-
-If you did not request a password reset, you can ignore this email.`  
-);
+    "Reset your password",
+    html
+  );
 }
 
 

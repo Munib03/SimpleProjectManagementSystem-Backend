@@ -1,14 +1,11 @@
 import transporter from "./mailer.js";
-import "dotenv/config";
 
-async function sendMail(email, subject, name, message) {
+async function sendMail(email, subject, html) {
   await transporter.sendMail({
     from: process.env.SMTP_FROM,
     to: email,
     subject,
-    text: `Hello ${name},
-
-${message}`
+    html
   });
 }
 
