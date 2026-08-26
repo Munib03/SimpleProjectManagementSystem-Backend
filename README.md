@@ -26,7 +26,6 @@ A backend REST API for a Project Management System built with Node.js, Express, 
 * Password reset
 * Password hashing with bcrypt
 * Request validation with Zod
-* Rate limiting
 * Redis for temporary data
 * Email notifications
 
