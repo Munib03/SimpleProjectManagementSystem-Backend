@@ -73,6 +73,3 @@ Authentication and user management are currently implemented.
 
 Project and task management features are not implemented yet.
 
-## Author
-
-**Hedyatullah Yamin**
